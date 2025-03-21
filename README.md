@@ -12,7 +12,7 @@ The key generation process involves the following steps:
 
 1. **Generate two large prime numbers**:
    - The primes *p* and *q* are generated using the `number.getPrime` function from the `Crypto.Util` library.
-   - The primes must satisfy the condition that :**$$gcd(p \cdot q, (p-1) \cdot (q-1)) = 1$$**
+   - The primes must satisfy the condition that : **$$gcd(p \cdot q, (p-1) \cdot (q-1)) = 1$$**
 
 2. **Compute *n*** :
    - $n = p \cdot q $, where *n* is part of the public key.
@@ -20,13 +20,13 @@ The key generation process involves the following steps:
 3. **Compute *g*** :
    - $g = n + 1$, which is also part of the public key.
 
-4. **Compute *$\lambda$*** :
+4. **Compute $\lambda$** :
    - $\lambda = \text{lcm}(p-1, q-1)$, where $\lambda$ is part of the private key.
 
-5. **Compute *$\mu$*** :
-   - * $\mu = \lambda^{-1} \mod n$, which is also part of the private key.
+5. **Compute $\mu$** :
+   - $\mu = \lambda^{-1} \mod n$, which is also part of the private key.
 
-The **public key** is $ (n, g) $, and the **private key** is $ (\lambda, \mu) $.
+The **public key** is $(n, g)$, and the **private key** is $(\lambda, \mu)$.
 
 
 ## Encryption
@@ -34,10 +34,10 @@ The **public key** is $ (n, g) $, and the **private key** is $ (\lambda, \mu) $.
 The encryption process involves the following steps:
 
 1. **Check the message range**:
-   - The message *m* must be in the range $ [0, n-1] $.
+   - The message *m* must be in the range $[0, n-1]$.
 
 2. **Generate a random number *r***:
-   -  *r* is a random integer such that $0 < r < n$ and $ \gcd(r, n) = 1 $.
+   -  *r* is a random integer such that $0 < r < n$ and $\gcd(r, n) = 1$.
 
 3. **Compute the ciphertext**:
    - The ciphertext *c* is computed as: $$c = (g^m \cdot r^n) \mod n^2$$
@@ -54,7 +54,7 @@ The decryption process involves the following steps:
    - This is used to recover the plaintext.
 
 3. **Recover the message**:
-   - The message * m * is computed as: $$m = L(c^\lambda \mod n^2) \cdot \mu \mod n $$
+   - The message *m* is computed as: $$m = L(c^\lambda \mod n^2) \cdot \mu \mod n $$
 
 
 ## Homomorphic Properties
@@ -62,12 +62,12 @@ The decryption process involves the following steps:
 The Paillier cryptosystem supports two homomorphic operations:
 
 1. **Homomorphic Addition**:
-   - Given two ciphertexts $c_1$ and $c_2$, the sum of the plaintexts $m_1 + m_2$ can be obtained by multiplying the ciphertexts:$$c_{\text{sum}} = (c_1 \cdot c_2) \mod n^2 $$
-   - Decrypting $c_{\text{sum}}$ yields $ m_1 + m_2 $.
+   - Given two ciphertexts $c_1$ and $c_2$, the sum of the plaintexts $m_1 + m_2$ can be obtained by multiplying the ciphertexts: $$c_{\text{sum}} = (c_1 \cdot c_2) \mod n^2$$
+   - Decrypting $c_{\text{sum}}$ yields $m_1 + m_2$.
 
 2. **Scalar Multiplication**:
-   - Given a ciphertext $c_1$ and a scalar $k$, the product $k \cdot m_1 $ can be obtained by raising the ciphertext to the power of $k$ : $$c_k = c_1^k \mod n^2 $$
-   - Decrypting $c_k$ yields $ k \cdot m_1 $
+   - Given a ciphertext $c_1$ and a scalar $k$, the product $k \cdot m_1$ can be obtained by raising the ciphertext to the power of $k$ : $$c_k = c_1^k \mod n^2$$
+   - Decrypting $c_k$ yields $k \cdot m_1$
 
 
 ## Testing
