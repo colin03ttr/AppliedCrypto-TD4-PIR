@@ -3,8 +3,7 @@ from paillier import Paillier
 class Client:
     def __init__(self, bits=1024):
         self.phe = Paillier(bits)
-        self.pk = self.phe.public_key
-        self.sk = self.phe.private_key
+        self.pk = (self.phe.n, self.phe.g)
 
     def request(self, db_size, index):
         query = []

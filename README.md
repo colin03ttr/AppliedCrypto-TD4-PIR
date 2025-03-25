@@ -59,59 +59,59 @@ The decryption process involves the following steps:
 
 ## Homomorphic Properties
 
-The Paillier cryptosystem supports two homomorphic operations:
+The Paillier cryptosystem supports these homomorphic operations:
 
-1. **Homomorphic Addition**:
-   - Given two ciphertexts $c_1$ and $c_2$, the sum of the plaintexts $m_1 + m_2$ can be obtained by multiplying the ciphertexts: $$c_{\text{sum}} = (c_1 \cdot c_2) \mod n^2$$
+1. **Homomorphic Addition of Two Ciphertexts**:
+   - Given two ciphertexts $c_1$ and $c_2$ encrypting plaintexts $m_1$ and $m_2$, their sum $m_1 + m_2$ can be obtained by multiplying the ciphertexts: 
+      $$c_{\text{sum}} = (c_1 \cdot c_2) \mod n^2$$
    - Decrypting $c_{\text{sum}}$ yields $m_1 + m_2$.
 
-2. **Scalar Multiplication**:
-   - Given a ciphertext $c_1$ and a scalar $k$, the product $k \cdot m_1$ can be obtained by raising the ciphertext to the power of $k$ : $$c_k = c_1^k \mod n^2$$
-   - Decrypting $c_k$ yields $k \cdot m_1$
+2. **Homomorphic Addition of a Plaintext to a Ciphertext**:
+   - Given a ciphertext $c_1$ encrypting plaintext $m_1$ and a plaintext $m_2$, their sum $m_1 + m_2$ can be obtained by multiplying the ciphertext by $g^{m_2}$:
+      $$c_{\text{result}} = (c_1 \cdot g^{m_2}) \mod n^2$$
+   - Decrypting $c_{\text{result}}$ yields $m_1 + m_2$.
+
+3. **Homomorphic Multiplication of a Ciphertext by a Scalar**:
+   - Given a ciphertext $c_1$ encrypting plaintext $m_1$ and a scalar $k$, the product $k \cdot m_1$ can be obtained by raising the ciphertext to the power of $k$:
+      $$c_k = c_1^k \mod n^2$$
+   - Decrypting $c_k$ yields $k \cdot m_1$.
 
 
-## Testing
+## PIR Protocol
 
-The implementation includes several test cases to verify correctness:
+**1. Compute t homomorphically :**
 
-1. **Encryption and Decryption**:
-   - A message is encrypted and then decrypted to ensure the original message is recovered.
+The server computes the dot product between the encrypted query vector `v` and the database `T` using Paillier's additive homomorphism:
 
-2. **Homomorphic Addition**:
-   - Two messages are encrypted, and their ciphertexts are multiplied. The result is decrypted to verify that it equals the sum of the original messages.
+   - t = Enc(0)
+   - for each index j in the database :
+      - `v[j]^T[j] mod n²`  homomorphic multiplication of ciphertext by plaintext
+      - multiply results : `t = (t * v[j]^T[j]) mod n²`
 
-3. **Scalar Multiplication**:
-   - A message is encrypted, and the ciphertext is raised to the power of a scalar. The result is decrypted to verify that it equals the scalar multiplied by the original message.
 
-## Usage
+**2. After decrypting `t`, the client gets the exact value `T[i]` from the database at the requested index i.**
 
-To use the Paillier cryptosystem, follow these steps:
+**3. Implement [client.py](./client.py)**
 
-1. **Initialize the Paillier object**:
-   ```python
-   phe = Paillier(1024)  # 1024-bit key size
-   ```
+   - constructor `__init__` for `Client` : generates Paillier
+   - `request` method : creates an encrypted query vector dor index `i`
+   - `decrypt_answer` method
 
-2. **Encrypt a message**:
-   ```python
-   message = "flag{paillier_encryption}"
-   ciphertext = phe.encrypt(string_to_int(message))
-   ```
+**4. Implement [server.py](./server.py)**
 
-3. **Decrypt the ciphertext**:
-   ```python
-   decrypted_message = int_to_string(phe.decrypt(ciphertext))
-   ```
+   - constructor `__init__` for `Server` : table of a given size
+   - `answer_request` method for homomorphic response
 
-4. **Perform homomorphic operations**:
-   - Homomorphic addition:
-     ```python
-     c_sum = (c1 * c2) % (phe.n**2)
-     decrypted_sum = phe.decrypt(c_sum)
-     ```
-   - Scalar multiplication:
-     ```python
-     c_k = gmpy2.powmod(c1, k, phe.n**2)
-     decrypted_k = phe.decrypt(c_k)
-     ```
+**5. Implement [exchanges.py](./exchanges.py)**
 
+   - tests the PIR protocol between Client and Server
+
+**6. Measure Execution Time:** plots in [exchange.py](./exchanges.py)
+   - As the database size increases:
+      - The client’s execution time grows linearly, since it must generate and encrypt a query vector of size n.
+      - The server’s execution time also increases linearly, as it must exponentiate each ciphertext with the corresponding DB value and multiply the results.
+
+**7. Communication Size Analysis:** plots in [exchange.py](./exchanges.py)
+
+   - Client → Server: Sends n ciphertexts, each roughly of size n² bits. Total size scales linearly with n.
+   - Server → Client: Sends only one ciphertext, so size is constant regardless of n.

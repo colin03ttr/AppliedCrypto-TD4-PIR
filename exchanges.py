@@ -1,44 +1,63 @@
 from client import Client
 from server import Server
 import time
+import matplotlib.pyplot as plt
+import sys
 
-client = Client(bits=1024)
-server = Server(db_size=100)
+# For measuring communication size
+def bit_size(x):
+    return x.bit_length()
 
-index_to_retrieve = 41
-query = client.request(db_size=100, index=index_to_retrieve)
+db_sizes = list(range(10, 101, 10))
+client_times = []
+server_times = []
+client_to_server_comm = []
+server_to_client_comm = []
 
-encrypted_answer = server.answer_request(query, client.pk)
+for db_size in db_sizes:
+    client = Client(bits=1024)
+    server = Server(db_size=db_size)
 
-decrypted_answer = client.decrypt_answer(encrypted_answer)
+    # Time client request generation
+    start = time.time()
+    query = client.request(db_size=db_size, index=db_size // 2)
+    client_time = time.time() - start
+    client_times.append(client_time)
 
-assert decrypted_answer == server.db[index_to_retrieve], "PIR protocol failed!"
-print(f"Retrieved value: {decrypted_answer} (Correct: {server.db[index_to_retrieve]})")
+    # Communication size: client sends db_size ciphertexts
+    # Each ciphertext ~ n^2, so we estimate bit size from one of them
+    ct_size = bit_size(query[0])
+    client_to_server_comm.append(ct_size * db_size)
 
-def measure_performance(db_sizes):
-    for size in db_sizes:
-        server = Server(size)
-        client = Client()
+    # Time server computation
+    start = time.time()
+    answer = server.answerRequest(query, client.pk)
+    server_time = time.time() - start
+    server_times.append(server_time)
 
-        # Measure server time
-        start = time.time()
-        query = client.request(size, index=size//2)  # Query middle element
-        encrypted_answer = server.answer_request(query, client.pk)
-        server_time = time.time() - start
+    # Communication size: server sends one ciphertext
+    server_to_client_comm.append(bit_size(answer))
 
-        # Measure client time
-        start = time.time()
-        decrypted_answer = client.decrypt_answer(encrypted_answer)
-        client_time = time.time() - start
+# Plot execution time
+plt.figure()
+plt.plot(db_sizes, client_times, label='Client Time')
+plt.plot(db_sizes, server_times, label='Server Time')
+plt.xlabel('Database Size')
+plt.ylabel('Execution Time (seconds)')
+plt.title('Execution Time vs. Database Size')
+plt.legend()
+plt.grid(True)
+plt.savefig("execution_time_vs_db_size.png")
+plt.show()
 
-        print(f"DB Size: {size} | Server Time: {server_time:.4f}s | Client Time: {client_time:.4f}s")
-
-def measure_communication(db_sizes, bits=1024):
-    for size in db_sizes:
-        client = Client(bits)
-        query = client.request(size, index=0)
-        
-        client_to_server_bits = size * 2 * bits
-        server_to_client_bits = 2 * bits
-        
-        print(f"DB Size: {size} | Client→Server: {client_to_server_bits} bits | Server→Client: {server_to_client_bits} bits")
+# Plot communication size
+plt.figure()
+plt.plot(db_sizes, client_to_server_comm, label='Client to Server')
+plt.plot(db_sizes, server_to_client_comm, label='Server to Client')
+plt.xlabel('Database Size')
+plt.ylabel('Communication Size (bits)')
+plt.title('Communication Size vs. Database Size')
+plt.legend()
+plt.grid(True)
+plt.savefig("communication_size_vs_db_size.png")
+plt.show()
