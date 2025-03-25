@@ -3,6 +3,7 @@
 Group (OCC3): 
 - Colin TANTER
 - Ismael TIR
+- Romain THIZON
 
 ---
 
